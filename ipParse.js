@@ -2,6 +2,17 @@
 const AWS = require('aws-sdk');
 const https = require('https');
 
+const ec2 = new AWS.EC2();
+
+const target = {
+  port: 443,
+  protocol: 'tcp',
+  region: 'us-west-2',
+  securityGroupId: 'sg-836a3a0',
+  service: 'EC2'
+};
+
+
 //Assigning IP range JSON into a variable
 const ipRangesUrl = 'https://ip-ranges.atlassian.com/';
 
@@ -14,13 +25,16 @@ const getIpRanges = () => {
       response.on('data', (d) => { data += d;});
       response.on('error', (e) => { return reject(e);});
       response.on('end', () => {
+        console.log(JSON.parse(data))
         return resolve(JSON.parse(data))
       })
     })
   })
 }
 
-//Convert the IP range objec to SG Ingress Rule
+
+
+// //Convert the IP range objec to SG Ingress Rule
 const toRule = (rangeObject) => {
   return {
     FromPort: target.port,
@@ -34,7 +48,7 @@ const toRule = (rangeObject) => {
   };
 };
 
-// Add Ingress Rules to SG
+// // Add Ingress Rules to SG
 const addIngressRules = (ipRanges) => {
   return new Promise((resolve, reject) => {
     const rules = ipRanges.
@@ -51,3 +65,12 @@ const addIngressRules = (ipRanges) => {
     });
   });
 };
+
+// exports.handle = (event, context) => {
+//   getIngressRules(target.securityGroupId).
+//     then(removeIngressRules).
+//     then(getIpRanges).
+//     then(addIngressRules).
+//     then(() => { context.succeed(true); }).
+//     catch((err) => { context.fail(err); });
+// };
